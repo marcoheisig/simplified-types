@@ -1,0 +1,30 @@
+#+TITLE: Simplified Types
+
+Common Lisp has powerful facilities for reasoning about types, including
+logical connectives, numeric intervals, and predicates involving arbitrary
+functions.  A downside of this expressiveness is that the manipulation of
+type specifiers is an arduous and error-prone task.  This library provides
+functions to simplify type specifiers.
+
+The simplified type hierarchy has been chosen to strike a balance between
+simplicity and expressiveness.  The following simplified type specifiers
+exist:
+
+- The symbols T and NIL.
+
+- The symbols FUNCTION, BASE-CHAR, EXTENDED-CHAR, PACKAGE, SYMBOL, and CONS.
+
+- The symbols SHORT-FLOAT, SINGLE-FLOAT, DOUBLE-FLOAT, and LONG-FLOAT.
+
+- The compound type specifier (INTEGER <lower-limit> <upper-limit>), where
+  <lower-limit> and <upper-limit> are either an integer, or the symbol *.
+
+- The compound type specifier (COMPLEX <float-type>), where <float-type> is
+  one of the symbols SHORT-FLOAT, SINGLE-FLOAT, DOUBLE-FLOAT, and
+  LONG-FLOAT.
+
+A consequence of restricting all types this way is that the simplified type
+lattice has only a single layer of disjoint types between T and NIL.  That
+means that all types except T and NIL are disjoint, that the join of any of
+these disjoint types is T, and that the meet of any of these disjoint types
+is NIL.
