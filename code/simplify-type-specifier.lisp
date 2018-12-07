@@ -1,5 +1,15 @@
 (in-package #:simplified-types)
 
+(trivia:defpattern floating-point-type-specifier (type)
+  (check-type type simplified-floating-point-type-specifier)
+  `(or ',type
+       (list ',type)
+       (list ',type
+             (or (type ,type) (list (type ,type)) '*))
+       (list ',type
+             (or (type ,type) (list (type ,type)) '*)
+             (or (type ,type) (list (type ,type)) '*))))
+
 (defun simplify-type-specifier (type-specifier)
   (flet ((fail () (error "Invalid type specifier: ~A" type-specifier)))
     (trivia:match type-specifier
@@ -7,29 +17,29 @@
       ((type simplified-type-specifier)
        type-specifier)
       ;; Unsigned integer types.
+      ('bit
+       '(integer 0 1))
       ((or 'unsigned-byte (list 'unsigned-byte '*))
        '(integer 0 *))
-      ((list 'unsigned-byte n)
-       (unless (typep n '(integer 1 *))
-         (fail))
+      ((list 'unsigned-byte (and n (type (integer 1 *))))
        `(integer 0 ,(1- (expt 2 n))))
-      ((list 'mod n)
-       (unless (typep n '(integer 1 *))
-         (fail))
+      ((list 'mod (and n (type (integer 1 *))))
        `(integer 0 ,(1- n)))
       ;; Signed integer types.
       ((or 'signed-byte (list 'signed-byte '*))
        '(integer * *))
-      ((list 'signed-byte n)
-       (unless (typep n '(integer 1 *))
-         (fail))
+      ((list 'signed-byte (and n (type (integer 1 *))))
        (let ((2^n (expt 2 n)))
          `(integer ,(1- (- 2^n)) ,(- 2^n 2))))
       ;; Interval integer types.
-      ((or (and 'integer (trivia:<> lower-limit '*) (trivia:<> upper-limit '*))
-           (and (list 'integer) (trivia:<> lower-limit '*) (trivia:<> upper-limit '*))
-           (and (list 'integer lower-limit) (trivia:<> upper-limit '*))
-           (and (list 'integer lower-limit upper-limit)))
+      ((or
+        (and (or 'integer (list 'integer))
+             (trivia:<> lower-limit '*) (trivia:<> upper-limit '*))
+        (and (list 'integer (and lower-limit (type integer)))
+             (trivia:<> upper-limit '*))
+        (list 'integer
+              (and lower-limit (or (type integer) (list (type integer))))
+              (and upper-limit (or (type integer) (list (type integer))))))
        (block nil
          (flet ((simplify-lower-limit (lower-limit)
                   (typecase lower-limit
@@ -46,41 +56,58 @@
            `(integer ,(simplify-lower-limit lower-limit)
                      ,(simplify-upper-limit upper-limit)))))
       ;; Floating point types.
-      ((or (list* 'short-float _) 'short-float) 'short-float)
-      ((or (list* 'single-float _) 'single-float) 'single-float)
-      ((or (list* 'double-float _) 'double-float) 'double-float)
-      ((or (list* 'long-float _) 'long-float) 'long-float)
+      ((floating-point-type-specifier short-float) 'short-float)
+      ((floating-point-type-specifier single-float) 'single-float)
+      ((floating-point-type-specifier double-float) 'double-float)
+      ((floating-point-type-specifier long-float) 'long-float)
       ;; Complex types.
-      ((list 'complex (or (list* 'short-float _) 'short-float)) '(complex short-float))
-      ((list 'complex (or (list* 'single-float _) 'single-float)) '(complex single-float))
-      ((list 'complex (or (list* 'double-float _) 'double-float)) '(complex double-float))
-      ((list 'complex (or (list* 'long-float) 'long-float)) '(complex long-float))
+      ((list 'complex (floating-point-type-specifier short-float)) '(complex short-float))
+      ((list 'complex (floating-point-type-specifier single-float)) '(complex single-float))
+      ((list 'complex (floating-point-type-specifier double-float)) '(complex double-float))
+      ((list 'complex (floating-point-type-specifier long-float)) '(complex long-float))
       ((or 'complex (list 'complex type))
-       (unless (subtypep type 'real)
-         (fail))
-       'number)
+       (case (simplify-type-specifier type)
+         (short-float '(complex short-float))
+         (single-float '(complex single-float))
+         (double-float '(complex double-float))
+         (long-float '(complex long-float))
+         (otherwise 't)))
       ;; Logical connectives.
-      ((list 'not type)
-       (if (eq type 't) 'nil 't))
+      ((list 'not type) (if (eq type 't) 'nil 't))
       ((list 'or) 'nil)
       ((list 'and) 't)
-      ((list (or 'and 'or) type) type)
+      ((list (or 'and 'or) type) (simplify-type-specifier type))
       ((list* 'and types)
        (reduce #'simplified-type-conjunction types :key #'simplify-type-specifier))
       ((list* 'or types)
        (reduce #'simplified-type-disjunction types :key #'simplify-type-specifier))
-      ;; Error handling.
-      ((list* (or 'unsigned-byte 'signed-byte 'integer 'mod 'complex 'not
-                  'short-float 'single-float 'double-float 'long-float)
-              _)
+      ;; Member types.
+      ((list 'member) 'nil)
+      ((list 'member object) (simplified-type-of object))
+      ((list* 'member objects)
+       (reduce #'simplified-type-disjunction objects :key #'simplified-type-of))
+      ((list 'eql object) (simplified-type-of object))
+      ;; Attempt to detect malformed type specifiers.
+      ((list 'satisfies predicate)
+       (unless (fboundp predicate)
+         (fail)))
+      ((or 'satisfies 'mod 'eql
+        (list* (or 'unsigned-byte 'mod 'signed-byte 'integer 'complex
+                   'short 'single-float 'double-float 'long-float
+                   'not 'eql 'values)
+               _))
        (fail))
-      ;; Expand recursively, or return T.
       (_
-       (multiple-value-bind (expansion expanded-p)
-           (introspect-environment:typexpand-1 type-specifier)
-         (if (not expanded-p)
-             't
-             (simplify-type-specifier expansion)))))))
+       ;; Handle function types.  These are too hairy for pattern matching.
+       (if (subtypep type-specifier 'function)
+           'function
+           ;; Attempt to expand recursively.
+           (multiple-value-bind (expansion expanded-p)
+               (handler-case (introspect-environment:typexpand-1 type-specifier)
+                 (error () (fail)))
+             (if (not expanded-p)
+                 't
+                 (simplify-type-specifier expansion))))))))
 
 (defun simplified-type-conjunction (t1 t2)
   (declare (simplified-type-specifier t1 t2))
