@@ -11,11 +11,13 @@
              (or (type ,type) (list (type ,type)) '*))))
 
 (defun simplify-type-specifier (type-specifier)
+  "Returns a simplified type specifier that is a supertype of TYPE-SPECIFIER.
+
+In particular, for any type specifier TS, the expression
+ (subtypep TS (simplify-type-specifier TS))
+will evaluate to either T T, or NIL NIL."
   (flet ((fail () (error "Invalid type specifier: ~A" type-specifier)))
     (trivia:match type-specifier
-      ;; Already simplified type specifiers.
-      ((type simplified-type-specifier)
-       type-specifier)
       ;; Unsigned integer types.
       ('bit
        '(integer 0 1))
@@ -32,6 +34,12 @@
        (let ((2^n (expt 2 n)))
          `(integer ,(1- (- 2^n)) ,(- 2^n 2))))
       ;; Interval integer types.
+      ((list 'integer
+             (and lower-limit (type integer))
+             (and upper-limit (type integer)))
+       (unless (<= lower-limit upper-limit)
+         (fail))
+       type-specifier)
       ((or
         (and (or 'integer (list 'integer))
              (trivia:<> lower-limit '*) (trivia:<> upper-limit '*))
@@ -40,21 +48,23 @@
         (list 'integer
               (and lower-limit (or (type integer) (list (type integer))))
               (and upper-limit (or (type integer) (list (type integer))))))
-       (block nil
-         (flet ((simplify-lower-limit (lower-limit)
-                  (typecase lower-limit
-                    ((eql *) '*)
-                    ((integer) lower-limit)
-                    ((cons integer null) (1+ (car lower-limit)))
-                    (t (fail))))
-                (simplify-upper-limit (upper-limit)
-                  (typecase upper-limit
-                    ((eql *) '*)
-                    ((integer) upper-limit)
-                    ((cons integer null) (1- (car upper-limit)))
-                    (t (fail)))))
-           `(integer ,(simplify-lower-limit lower-limit)
-                     ,(simplify-upper-limit upper-limit)))))
+       (let ((lower-limit
+               (typecase lower-limit
+                 ((eql *) '*)
+                 ((integer) lower-limit)
+                 ((cons integer null) (1+ (car lower-limit)))
+                 (t (fail))))
+             (upper-limit
+               (typecase upper-limit
+                 ((eql *) '*)
+                 ((integer) upper-limit)
+                 ((cons integer null) (1- (car upper-limit)))
+                 (t (fail)))))
+         (when (and (integerp lower-limit)
+                    (integerp upper-limit)
+                    (< upper-limit lower-limit))
+           (fail))
+         `(integer ,lower-limit ,upper-limit)))
       ;; Floating point types.
       ((floating-point-type-specifier short-float) 'short-float)
       ((floating-point-type-specifier single-float) 'single-float)
@@ -87,6 +97,8 @@
       ((list* 'member objects)
        (reduce #'simplified-type-disjunction objects :key #'simplified-type-of))
       ((list 'eql object) (simplified-type-of object))
+      ;; Skip already simplified type specifiers.
+      ((type simplified-type-specifier) type-specifier)
       ;; Attempt to detect malformed type specifiers.
       ((list 'satisfies predicate)
        (unless (fboundp predicate)
