@@ -40,14 +40,17 @@ will evaluate to either T T, or NIL NIL."
        (unless (<= lower-limit upper-limit)
          (fail))
        type-specifier)
+      ((and (or 'integer
+                (list 'integer)
+                (list 'integer '*)
+                (list 'integer '* '*)))
+       '(integer * *))
       ((or
-        (and (or 'integer (list 'integer))
-             (trivia:<> lower-limit '*) (trivia:<> upper-limit '*))
-        (and (list 'integer (and lower-limit (type integer)))
+        (and (list 'integer (and lower-limit (type integer) (list (type integer))))
              (trivia:<> upper-limit '*))
         (list 'integer
-              (and lower-limit (or (type integer) (list (type integer))))
-              (and upper-limit (or (type integer) (list (type integer))))))
+              (and lower-limit (or '* (type integer) (list (type integer))))
+              (and upper-limit (or '* (type integer) (list (type integer))))))
        (let ((lower-limit
                (typecase lower-limit
                  ((eql *) '*)
