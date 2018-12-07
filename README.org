@@ -10,21 +10,26 @@ The simplified type hierarchy has been chosen to strike a balance between
 simplicity and expressiveness.  The following simplified type specifiers
 exist:
 
-- The symbols T and NIL.
+- The symbols =t= and =nil=.
 
-- The symbols FUNCTION, BASE-CHAR, EXTENDED-CHAR, PACKAGE, SYMBOL, and CONS.
+- The symbols =function=, =base-char=, =extended-char=, =pakage=, =symbol=, and =cons=.
 
-- The symbols SHORT-FLOAT, SINGLE-FLOAT, DOUBLE-FLOAT, and LONG-FLOAT.
+- The symbols =short-float=, =single-float=, =double-float=, and =long-float=.
 
-- The compound type specifier (INTEGER <lower-limit> <upper-limit>), where
-  <lower-limit> and <upper-limit> are either an integer, or the symbol *.
+- The compound type specifier =(integer <lower-limit> <upper-limit>)=,
+  where =<lower-limit= and =<upper-limit>= are either an integer, or the
+  symbol =*=.
 
-- The compound type specifier (COMPLEX <float-type>), where <float-type> is
-  one of the symbols SHORT-FLOAT, SINGLE-FLOAT, DOUBLE-FLOAT, and
-  LONG-FLOAT.
+- The compound type specifier =(complex <float-type>)=, where
+  =<float-type>= is one of the symbols =short-float=, =single-float=,
+  =double-float=, or =long-float=.
 
 A consequence of restricting all types this way is that the simplified type
-lattice has only a single layer of disjoint types between T and NIL.  That
-means that all types except T and NIL are disjoint, that the join of any of
-these disjoint types is T, and that the meet of any of these disjoint types
-is NIL.
+lattice has only a single layer of disjoint types between =t= and =nil=.
+That means that all types except =t= and =nil= are disjoint, that the join
+of any of these disjoint types is =t=, and that the meet of any of these
+disjoint types is =nil=.
+
+Despite its simplicity, this set of types is expressive enough to help a
+compiler generate fast code.  In particular, it covers all upgraded array
+element types that are usually provided by an implementation.
