@@ -10,7 +10,7 @@
              (or (type ,type) (list (type ,type)) '*)
              (or (type ,type) (list (type ,type)) '*))))
 
-(defun simplify-type-specifier (type-specifier)
+(defun simplify-type-specifier (type-specifier &optional environment)
   "Returns a simplified type specifier that is a supertype of TYPE-SPECIFIER.
 
 In particular, for any type specifier TS, the expression
@@ -107,22 +107,22 @@ will evaluate to either T T, or NIL NIL."
        (unless (fboundp predicate)
          (fail)))
       ((or 'satisfies 'mod 'eql
-        (list* (or 'unsigned-byte 'mod 'signed-byte 'integer 'complex
-                   'short 'single-float 'double-float 'long-float
-                   'not 'eql 'values)
-               _))
+           (list* (or 'unsigned-byte 'mod 'signed-byte 'integer 'complex
+                      'short 'single-float 'double-float 'long-float
+                      'not 'eql 'values)
+                  _))
        (fail))
       (_
        ;; Handle function types.  These are too hairy for pattern matching.
-       (if (subtypep type-specifier 'function)
+       (if (subtypep type-specifier 'function environment)
            'function
            ;; Attempt to expand recursively.
            (multiple-value-bind (expansion expanded-p)
-               (handler-case (introspect-environment:typexpand-1 type-specifier)
+               (handler-case (introspect-environment:typexpand-1 type-specifier environment)
                  (error () (fail)))
              (if (not expanded-p)
                  't
-                 (simplify-type-specifier expansion))))))))
+                 (simplify-type-specifier expansion environment))))))))
 
 (defun simplified-type-conjunction (t1 t2)
   (declare (simplified-type-specifier t1 t2))
