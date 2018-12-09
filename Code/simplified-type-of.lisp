@@ -47,9 +47,7 @@ likely to be more efficient."))
   'function)
 
 (defmethod simplified-type-of ((character character))
-  (if (typep character 'base-char)
-      'base-char
-      'extended-char))
+  'character)
 
 (defmethod simplified-type-of ((package package))
   'package)

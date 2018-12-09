@@ -12,7 +12,7 @@ exist:
 
 - The symbols =t= and =nil=.
 
-- The symbols =function=, =base-char=, =extended-char=, =pakage=, =symbol=, and =cons=.
+- The symbols =function=, =character=, =pakage=, =symbol=, and =cons=.
 
 - The symbols =short-float=, =single-float=, =double-float=, and =long-float=.
 

@@ -16,7 +16,7 @@
 
 (deftype simplified-type-specifier ()
   '(or
-    (member t function base-char extended-char package symbol cons nil)
+    (member t function character package symbol cons nil)
     simplified-integer-type-specifier
     simplified-complex-type-specifier
     simplified-floating-point-type-specifier))
