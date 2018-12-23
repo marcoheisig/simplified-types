@@ -10,12 +10,11 @@
              (or (type ,type) (list (type ,type)) '*)
              (or (type ,type) (list (type ,type)) '*))))
 
-(defun simplify-type-specifier (type-specifier &optional environment)
+(defun simplify-type (type-specifier &optional environment)
   "Returns a simplified type specifier that is a supertype of TYPE-SPECIFIER.
 
 In particular, for any type specifier TS, the expression
- (subtypep TS (simplify-type-specifier TS))
-will evaluate to either T T, or NIL NIL."
+ (subtypep TS (simplify-type TS)) will evaluate to either T T, or NIL NIL."
   (flet ((fail () (error "Invalid type specifier: ~A" type-specifier)))
     (trivia:match type-specifier
       ;; Unsigned integer types.
@@ -79,7 +78,7 @@ will evaluate to either T T, or NIL NIL."
       ((list 'complex (floating-point-type-specifier double-float)) '(complex double-float))
       ((list 'complex (floating-point-type-specifier long-float)) '(complex long-float))
       ((or 'complex (list 'complex type))
-       (case (simplify-type-specifier type)
+       (case (simplify-type type)
          (short-float '(complex short-float))
          (single-float '(complex single-float))
          (double-float '(complex double-float))
@@ -89,11 +88,11 @@ will evaluate to either T T, or NIL NIL."
       ((list 'not type) (if (eq type 't) 'nil 't))
       ((list 'or) 'nil)
       ((list 'and) 't)
-      ((list (or 'and 'or) type) (simplify-type-specifier type))
+      ((list (or 'and 'or) type) (simplify-type type))
       ((list* 'and types)
-       (reduce #'simplified-type-conjunction types :key #'simplify-type-specifier))
+       (reduce #'simplified-type-conjunction types :key #'simplify-type))
       ((list* 'or types)
-       (reduce #'simplified-type-disjunction types :key #'simplify-type-specifier))
+       (reduce #'simplified-type-disjunction types :key #'simplify-type))
       ;; Member types.
       ((list 'member) 'nil)
       ((list 'member object) (simplified-type-of object))
@@ -122,7 +121,7 @@ will evaluate to either T T, or NIL NIL."
                  (error () (fail)))
              (if (not expanded-p)
                  't
-                 (simplify-type-specifier expansion environment))))))))
+                 (simplify-type expansion environment))))))))
 
 (defun simplified-type-conjunction (t1 t2)
   (declare (simplified-type-specifier t1 t2))

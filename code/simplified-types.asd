@@ -12,4 +12,4 @@
   ((:file "packages")
    (:file "simplified-types")
    (:file "simplified-type-of")
-   (:file "simplify-type-specifier")))
+   (:file "simplify-type")))

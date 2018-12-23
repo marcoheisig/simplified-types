@@ -4,5 +4,5 @@
   (:use #:common-lisp)
   (:export
    #:simplified-type-specifier
-   #:simplify-type-specifier
+   #:simplify-type
    #:simplified-type-of))
