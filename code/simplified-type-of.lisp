@@ -18,19 +18,24 @@ likely to be more efficient."))
 (defmacro compile-time-when (test &body body)
   (when (eval test) `(progn ,@body)))
 
-(compile-time-when (find-class 'short-float nil)
+(defmacro enable-if-class-exists (class &body body)
+  (if (find-class class nil)
+      `(progn ,@body)
+      `(progn)))
+
+(enable-if-class-exists short-float
   (defmethod simplified-type-of ((short-float short-float))
     'short-float))
 
-(compile-time-when (find-class 'single-float nil)
+(enable-if-class-exists single-float
   (defmethod simplified-type-of ((single-float single-float))
     'single-float))
 
-(compile-time-when (find-class 'double-float nil)
+(enable-if-class-exists double-float
   (defmethod simplified-type-of ((double-float double-float))
     'double-float))
 
-(compile-time-when (find-class 'long-float nil)
+(enable-if-class-exists long-float
   (defmethod simplified-type-of ((long-float long-float))
     'long-float))
 
