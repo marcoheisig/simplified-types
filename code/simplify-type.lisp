@@ -19,19 +19,19 @@ In particular, for any type specifier TS, the expression
     (trivia:match type-specifier
       ;; Unsigned integer types.
       ('bit
-       '(integer 0 1))
+       (make-integer-type 0 1))
       ((or 'unsigned-byte (list 'unsigned-byte '*))
-       '(integer 0 *))
+       (make-integer-type 0 '*))
       ((list 'unsigned-byte (and n (type (integer 1 *))))
-       `(integer 0 ,(1- (expt 2 n))))
+       (make-integer-type 0 (1- (expt 2 n))))
       ((list 'mod (and n (type (integer 1 *))))
-       `(integer 0 ,(1- n)))
+       (make-integer-type 0 (1- n)))
       ;; Signed integer types.
       ((or 'signed-byte (list 'signed-byte '*))
-       '(integer * *))
+       (make-integer-type '* '*))
       ((list 'signed-byte (and n (type (integer 1 *))))
        (let ((2^n (expt 2 n)))
-         `(integer ,(1- (- 2^n)) ,(- 2^n 2))))
+         (make-integer-type (1- (- 2^n)) (- 2^n 2))))
       ;; Interval integer types.
       ((list 'integer
              (and lower-limit (type integer))
@@ -43,7 +43,7 @@ In particular, for any type specifier TS, the expression
                 (list 'integer)
                 (list 'integer '*)
                 (list 'integer '* '*)))
-       '(integer * *))
+       (make-integer-type '* '*))
       ((or
         (and (list 'integer (and lower-limit (type integer) (list (type integer))))
              (trivia:<> upper-limit '*))
@@ -66,7 +66,7 @@ In particular, for any type specifier TS, the expression
                     (integerp upper-limit)
                     (< upper-limit lower-limit))
            (fail))
-         `(integer ,lower-limit ,upper-limit)))
+         (make-integer-type lower-limit upper-limit)))
       ;; Floating point types.
       ((floating-point-type-specifier short-float) 'short-float)
       ((floating-point-type-specifier single-float) 'single-float)
@@ -145,10 +145,10 @@ In particular, for any type specifier TS, the expression
                         (cond ((eq upper-limit-1 '*) upper-limit-2)
                               ((eq upper-limit-2 '*) upper-limit-1)
                               (t (min upper-limit-1 upper-limit-2)))))
-                  (cond ((or (eq lower-limit '*) (eq upper-limit '*))
-                         `(integer ,lower-limit ,upper-limit))
-                        ((<= lower-limit upper-limit)
-                         `(integer ,lower-limit ,upper-limit))
+                  (cond ((or (eq lower-limit '*)
+                             (eq upper-limit '*)
+                             (<= lower-limit upper-limit))
+                         (make-integer-type lower-limit upper-limit))
                         (t 'nil))))))
            ((eq (first t1) 'complex)
             (if (eq (second t1) (second t2)) t1 'nil))))))
@@ -175,7 +175,7 @@ In particular, for any type specifier TS, the expression
                         (cond ((eq upper-limit-1 '*) '*)
                               ((eq upper-limit-2 '*) '*)
                               (t (max upper-limit-1 upper-limit-2)))))
-                  `(integer ,lower-limit ,upper-limit)))))
+                  (make-integer-type lower-limit upper-limit)))))
            ((eq (first t1) 'complex)
             (if (eq (second t1) (second t2)) t1 't))))))
 

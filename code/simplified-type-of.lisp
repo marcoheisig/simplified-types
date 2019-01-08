@@ -13,7 +13,7 @@ likely to be more efficient."))
   't)
 
 (defmethod simplified-type-of ((integer integer))
-  `(integer ,integer ,integer))
+  (make-integer-type integer integer))
 
 (defmacro compile-time-when (test &body body)
   (when (eval test) `(progn ,@body)))
