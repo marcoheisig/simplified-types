@@ -4,10 +4,10 @@
   :license "MIT"
 
   :depends-on
-  ("alexandria"
-   "introspect-environment"
+  ("introspect-environment"
    "trivia")
 
+  :serial t
   :components
   ((:file "packages")
    (:file "simplified-types")
