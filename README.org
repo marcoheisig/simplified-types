@@ -33,3 +33,8 @@ disjoint types is =nil=.
 Despite its simplicity, this set of types is expressive enough to help a
 compiler generate fast code.  In particular, it covers all upgraded array
 element types that are usually provided by an implementation.
+
+The special variable =*precise-integer-types*= decides whether integer
+types have a precise upper and lower limit, or whether the simplification
+may also upgrade the bounds to the symbol =*=.  The advantage of the latter
+approach is that type simplification will not cons.
