@@ -20,14 +20,14 @@ In particular, for any type specifier TS, the expression
       ;; Unsigned integer types.
       ('bit
        (make-integer-type 0 1))
-      ((or 'unsigned-byte (list 'unsigned-byte '*))
+      ((or 'unsigned-byte (list 'unsigned-byte) (list 'unsigned-byte '*))
        (make-integer-type 0 '*))
       ((list 'unsigned-byte (and n (type (integer 1 *))))
        (make-integer-type 0 (1- (expt 2 n))))
       ((list 'mod (and n (type (integer 1 *))))
        (make-integer-type 0 (1- n)))
       ;; Signed integer types.
-      ((or 'signed-byte (list 'signed-byte '*))
+      ((or 'signed-byte (list 'signed-byte) (list 'signed-byte '*))
        (make-integer-type '* '*))
       ((list 'signed-byte (and n (type (integer 1 *))))
        (let ((2^n (expt 2 n)))
