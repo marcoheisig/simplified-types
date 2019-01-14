@@ -6,6 +6,14 @@ functions.  A downside of this expressiveness is that the manipulation of
 type specifiers is an arduous and error-prone task.  This library provides
 functions to simplify type specifiers.
 
+The API consists of two functions:
+
+- =simplify-type= takes a type specifier and, optionally, an environment,
+  and returns the corresponding simplified type.
+
+- =simplified-type-of= takes an object and returns the simplified type of
+  that object.
+
 The simplified type hierarchy has been chosen to strike a balance between
 simplicity and expressiveness.  The following simplified type specifiers
 exist:
