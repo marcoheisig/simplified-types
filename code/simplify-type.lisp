@@ -1,7 +1,6 @@
 (in-package #:simplified-types)
 
 (trivia:defpattern floating-point-type-specifier (type)
-  (check-type type simplified-floating-point-type-specifier)
   `(or ',type
        (list ',type)
        (list ',type
@@ -33,56 +32,41 @@ In particular, for any type specifier TS, the expression
        (let ((2^n (expt 2 n)))
          (make-integer-type (1- (- 2^n)) (- 2^n 2))))
       ;; Interval integer types.
-      ((list 'integer
-             (and lower-limit (type integer))
-             (and upper-limit (type integer)))
-       (unless (<= lower-limit upper-limit)
-         (fail))
-       type-specifier)
-      ((and (or 'integer
-                (list 'integer)
-                (list 'integer '*)
-                (list 'integer '* '*)))
-       (make-integer-type '* '*))
-      ((or
-        (and (list 'integer (and lower-limit (type integer) (list (type integer))))
-             (trivia:<> upper-limit '*))
-        (list 'integer
-              (and lower-limit (or '* (type integer) (list (type integer))))
-              (and upper-limit (or '* (type integer) (list (type integer))))))
-       (let ((lower-limit
-               (typecase lower-limit
+      ('integer (make-integer-type '* '*))
+      ((or (and 'integer (trivia:<> lower-bound '*) (trivia:<> upper-bound '*))
+           (and (list 'integer) (trivia:<> lower-bound '*) (trivia:<> upper-bound '*))
+           (and (list 'integer lower-bound) (trivia:<> upper-bound '*))
+           (and (list 'integer lower-bound upper-bound)))
+       (let ((simplified-lower-bound
+               (typecase lower-bound
                  ((eql *) '*)
-                 ((integer) lower-limit)
-                 ((cons integer null) (1+ (car lower-limit)))
-                 (t (fail))))
-             (upper-limit
-               (typecase upper-limit
+                 (integer lower-bound)
+                 ((cons integer null) (1+ (car lower-bound)))
+                 (otherwise (fail))))
+             (simplified-upper-bound
+               (typecase upper-bound
                  ((eql *) '*)
-                 ((integer) upper-limit)
-                 ((cons integer null) (1- (car upper-limit)))
-                 (t (fail)))))
-         (when (and (integerp lower-limit)
-                    (integerp upper-limit)
-                    (< upper-limit lower-limit))
-           (fail))
-         (make-integer-type lower-limit upper-limit)))
+                 (integer upper-bound)
+                 ((cons integer null) (1- (car upper-bound)))
+                 (otherwise (fail)))))
+         (when (and (integerp simplified-lower-bound)
+                    (integerp simplified-upper-bound)
+                    (not (<= simplified-lower-bound simplified-upper-bound)))
+           'nil)
+         (make-integer-type simplified-lower-bound simplified-upper-bound)))
       ;; Floating point types.
-      ((floating-point-type-specifier short-float) 'short-float)
-      ((floating-point-type-specifier single-float) 'single-float)
-      ((floating-point-type-specifier double-float) 'double-float)
-      ((floating-point-type-specifier long-float) 'long-float)
+      ((floating-point-type-specifier short-float) +short-float-type+)
+      ((floating-point-type-specifier single-float) +single-float-type+)
+      ((floating-point-type-specifier double-float) +double-float-type+)
+      ((floating-point-type-specifier long-float) +long-float-type+)
       ;; Complex types.
-      ((list 'complex (floating-point-type-specifier short-float)) '(complex short-float))
-      ((list 'complex (floating-point-type-specifier single-float)) '(complex single-float))
-      ((list 'complex (floating-point-type-specifier double-float)) '(complex double-float))
-      ((list 'complex (floating-point-type-specifier long-float)) '(complex long-float))
-      ((or 'complex (list 'complex type))
+      ((or 'complex (list 'complex) (list 'complex '*)) 't)
+      ((list 'complex type)
        (case (simplify-type type)
-         (short-float '(complex short-float))
-         (single-float '(complex single-float))
-         (double-float '(complex double-float))
-         (long-float '(complex long-float))
+         (short-float +complex-short-float-type+)
+         (single-float +complex-single-float-type+)
+         (double-float +complex-double-float-type+)
+         (long-float +complex-long-float-type+)
          (otherwise 't)))
       ;; Logical connectives.
       ((list 'not type) (if (eq type 't) 'nil 't))
@@ -103,7 +87,7 @@ In particular, for any type specifier TS, the expression
       ((type simplified-type-specifier) type-specifier)
       ;; Attempt to detect malformed type specifiers.
       ((list 'satisfies predicate)
-       (unless (fboundp predicate)
+       (unless (and (symbolp predicate) (fboundp predicate))
          (fail)))
       ((or 'satisfies 'mod 'eql
            (list* (or 'unsigned-byte 'mod 'signed-byte 'integer 'complex
@@ -178,4 +162,3 @@ In particular, for any type specifier TS, the expression
                   (make-integer-type lower-limit upper-limit)))))
            ((eq (first t1) 'complex)
             (if (eq (second t1) (second t2)) t1 't))))))
-

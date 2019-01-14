@@ -4,8 +4,11 @@
   :license "MIT"
 
   :depends-on
-  ("introspect-environment"
+  ("alexandria"
+   "introspect-environment"
    "trivia")
+
+  :in-order-to ((test-op (test-op :simplified-types-test-suite)))
 
   :serial t
   :components
