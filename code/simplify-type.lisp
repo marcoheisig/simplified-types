@@ -14,6 +14,7 @@
 
 In particular, for any type specifier TS, the expression
  (subtypep TS (simplify-type TS)) will evaluate to either T T, or NIL NIL."
+  (declare (optimize (compilation-speed 0)))
   (flet ((fail () (error "Invalid type specifier: ~A" type-specifier)))
     (trivia:match type-specifier
       ;; Unsigned integer types.
@@ -32,10 +33,8 @@ In particular, for any type specifier TS, the expression
        (let ((2^n (expt 2 n)))
          (make-integer-type (1- (- 2^n)) (- 2^n 2))))
       ;; Interval integer types.
-      ('integer (make-integer-type '* '*))
-      ((or (and 'integer (trivia:<> lower-bound '*) (trivia:<> upper-bound '*))
-           (and (list 'integer) (trivia:<> lower-bound '*) (trivia:<> upper-bound '*))
-           (and (list 'integer lower-bound) (trivia:<> upper-bound '*))
+      ((or 'integer (list 'integer)) (make-integer-type '* '*))
+      ((or (and (list 'integer lower-bound) (trivia:<> upper-bound '*))
            (and (list 'integer lower-bound upper-bound)))
        (let ((simplified-lower-bound
                (typecase lower-bound
@@ -49,11 +48,22 @@ In particular, for any type specifier TS, the expression
                  (integer upper-bound)
                  ((cons integer null) (1- (car upper-bound)))
                  (otherwise (fail)))))
-         (when (and (integerp simplified-lower-bound)
-                    (integerp simplified-upper-bound)
-                    (not (<= simplified-lower-bound simplified-upper-bound)))
-           'nil)
-         (make-integer-type simplified-lower-bound simplified-upper-bound)))
+         (if (and (integerp simplified-lower-bound)
+                  (integerp simplified-upper-bound)
+                  (not (<= simplified-lower-bound simplified-upper-bound)))
+             'nil
+             (make-integer-type simplified-lower-bound simplified-upper-bound))))
+      ;; Cons types.
+      ((or (and (or 'cons (list 'cons)) (trivia:<> car-type '*) (trivia:<> cdr-type '*))
+           (and (list 'cons car-type) (trivia:<> cdr-type '*))
+           (and (list 'cons car-type cdr-type)))
+       (flet ((empty-type-p (type)
+                (and (not (eq type '*))
+                     (null (simplify-type type)))))
+         (if (or (empty-type-p car-type)
+                 (empty-type-p cdr-type))
+             'nil
+             'cons)))
       ;; Floating point types.
       ((floating-point-type-specifier short-float) +short-float-type+)
       ((floating-point-type-specifier single-float) +single-float-type+)
@@ -87,8 +97,9 @@ In particular, for any type specifier TS, the expression
       ((type simplified-type-specifier) type-specifier)
       ;; Attempt to detect malformed type specifiers.
       ((list 'satisfies predicate)
-       (unless (and (symbolp predicate) (fboundp predicate))
-         (fail)))
+       (if (and (symbolp predicate) (fboundp predicate))
+           't
+           (fail)))
       ((or 'satisfies 'mod 'eql
            (list* (or 'unsigned-byte 'mod 'signed-byte 'integer 'complex
                       'short 'single-float 'double-float 'long-float
@@ -108,7 +119,7 @@ In particular, for any type specifier TS, the expression
                  (simplify-type expansion environment))))))))
 
 (defun simplified-type-conjunction (t1 t2)
-  (declare (simplified-type-specifier t1 t2))
+  (declare (type simplified-type-specifier t1 t2))
   (etypecase t1
     (symbol
      (cond ((eq t1 t2) t1)
@@ -138,7 +149,7 @@ In particular, for any type specifier TS, the expression
             (if (eq (second t1) (second t2)) t1 'nil))))))
 
 (defun simplified-type-disjunction (t1 t2)
-  (declare (simplified-type-specifier t1 t2))
+  (declare (type simplified-type-specifier t1 t2))
   (etypecase t1
     (symbol
      (cond ((eq t1 t2) t1)
