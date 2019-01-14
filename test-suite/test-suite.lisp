@@ -9,9 +9,9 @@
       result)))
 
 (defun run-test-suite ()
-  (test-repeatedly #'test-arbitrary-types 100000)
-  (test-repeatedly #'test-integer-types 100000)
-  (test-repeatedly #'test-hairy-types 100000))
+  (test-repeatedly #'test-arbitrary-types 10000)
+  (test-repeatedly #'test-integer-types 10000)
+  (test-repeatedly #'test-hairy-types 10000))
 
 (defun test-repeatedly (test &optional max-tests)
   (if (null max-tests)

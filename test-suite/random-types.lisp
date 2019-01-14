@@ -101,10 +101,11 @@
       (one-of
         type
         'ratio
-        `(,type ,(one-of lower-bound (list lower-bound) '*))
-        `(,type ,(one-of lower-bound (list lower-bound) '*))
-        `(,type ,(one-of lower-bound (list lower-bound) '*)
-                ,(one-of upper-bound (list lower-bound) '*))))))
+        `(,type ,(one-of lower-bound (list (1- lower-bound)) '*))
+        `(,type ,(one-of lower-bound (list (1- lower-bound)) '*) *)
+        `(,type * ,(one-of upper-bound (list (1+ upper-bound))))
+        `(,type ,(one-of lower-bound (list (1- lower-bound)) '*)
+                ,(one-of upper-bound (list (1+ upper-bound)) '*))))))
 
 (defun random-array-type-specifier ()
   (one-of
