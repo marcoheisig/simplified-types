@@ -54,9 +54,6 @@ likely to be more efficient."))
 (defmethod simplified-type-of ((character character))
   'character)
 
-(defmethod simplified-type-of ((package package))
-  'package)
-
 (defmethod simplified-type-of ((symbol symbol))
   'symbol)
 
