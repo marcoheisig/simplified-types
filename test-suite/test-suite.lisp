@@ -2,6 +2,7 @@
 
 (defun simplify-type-cautiously (type-specifier)
   (let ((result (simplify-type type-specifier)))
+    (assert (typep result 'simplified-type-specifier))
     (multiple-value-bind (subtype-p valid-p)
         (subtypep type-specifier result)
       (assert (eq subtype-p valid-p))
