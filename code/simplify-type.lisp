@@ -35,7 +35,7 @@ In particular, for any type specifier TS, the expression
       ;; Interval integer types.
       ((or 'integer (list 'integer)) (make-integer-type '* '*))
       ((or (and (list 'integer lower-bound) (trivia:<> upper-bound '*))
-           (and (list 'integer lower-bound upper-bound)))
+           (list 'integer lower-bound upper-bound))
        (let ((simplified-lower-bound
                (typecase lower-bound
                  ((eql *) '*)

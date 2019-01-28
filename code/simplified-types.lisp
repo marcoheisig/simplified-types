@@ -83,9 +83,13 @@ guaranteed to be non-consing.")
 ;;;
 ;;; General Simplified Type Specifiers
 
+(deftype simplified-number-type-specifier ()
+  '(or
+    simplified-integer-type-specifier
+    simplified-floating-point-type-specifier
+    simplified-complex-type-specifier))
+
 (deftype simplified-type-specifier ()
   '(or
     (member t function character symbol cons nil)
-    simplified-integer-type-specifier
-    simplified-complex-type-specifier
-    simplified-floating-point-type-specifier))
+    simplified-number-type-specifier))
