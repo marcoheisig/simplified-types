@@ -15,9 +15,6 @@ likely to be more efficient."))
 (defmethod simplified-type-of ((integer integer))
   (make-integer-type integer integer))
 
-(defmacro compile-time-when (test &body body)
-  (when (eval test) `(progn ,@body)))
-
 (defmacro enable-if-class-exists (class &body body)
   (if (find-class class nil)
       `(progn ,@body)
