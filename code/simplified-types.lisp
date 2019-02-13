@@ -39,10 +39,12 @@
                  (error "Invalid complex type: ~S." type))))
       `(progn
          (deftype simplified-complex-type-specifier ()
-           '(cons
-             (eql complex)
-             (cons (or ,@(loop for (nil type) in complex-types collect `(eql ,type)))
-              null)))
+           '(or
+             (eql t) ; Non-float complex numbers are upgraded to the type T.
+             (cons
+              (eql complex)
+              (cons (or ,@(loop for (nil type) in complex-types collect `(eql ,type)))
+               null))))
          (alexandria:define-constant +complex-short-float-type+ ',(find-type '(complex short-float)) :test 'equal)
          (alexandria:define-constant +complex-single-float-type+ ',(find-type '(complex single-float)) :test 'equal)
          (alexandria:define-constant +complex-double-float-type+ ',(find-type '(complex double-float)) :test 'equal)
