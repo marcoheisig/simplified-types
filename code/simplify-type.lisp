@@ -103,7 +103,7 @@ In particular, for any type specifier TS, the expression
       ((or 'satisfies 'mod 'eql
            (list* (or 'unsigned-byte 'mod 'signed-byte 'integer 'complex
                       'short 'single-float 'double-float 'long-float
-                      'not 'eql 'values)
+                      'not 'eql 'values 'quote)
                   _))
        (fail))
       (_
