@@ -65,9 +65,9 @@
 (defvar *precise-integer-types* t
   "Whether the lower- and upper-limit of simplified integer type specifiers
 should be as accurate as possible, or whether it is permissible that one or
-both of them can be upgraded to the symbol *.
+both of them can be upgraded to a wider bound or the symbol *.
 
-While the value of this variable is false, working with simplified types is
+When the value of this variable is false, working with simplified types is
 guaranteed to be non-consing.")
 
 (defun make-integer-type (lower-limit upper-limit)
