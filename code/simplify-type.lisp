@@ -29,6 +29,8 @@ In particular, for any type specifier TS, the expression
       ;; Signed integer types.
       ((or 'signed-byte (list 'signed-byte) (list 'signed-byte '*))
        (make-integer-type '* '*))
+      ('fixnum
+       (make-integer-type most-negative-fixnum most-positive-fixnum))
       ((list 'signed-byte (and n (type (integer 1 *))))
        (let ((2^n (expt 2 n)))
          (make-integer-type (1- (- 2^n)) (- 2^n 2))))
