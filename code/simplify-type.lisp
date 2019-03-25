@@ -32,8 +32,8 @@ In particular, for any type specifier TS, the expression
       ('fixnum
        (make-integer-type most-negative-fixnum most-positive-fixnum))
       ((list 'signed-byte (and n (type (integer 1 *))))
-       (let ((2^n (expt 2 n)))
-         (make-integer-type (1- (- 2^n)) (- 2^n 2))))
+       (let ((pow (expt 2 (1- n))))
+         (make-integer-type (- pow) (1- pow))))
       ;; Interval integer types.
       ((or 'integer (list 'integer)) (make-integer-type '* '*))
       ((or (and (list 'integer lower-bound) (trivia:<> upper-bound '*))
