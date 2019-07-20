@@ -4,7 +4,8 @@
   :license "MIT"
 
   :depends-on
-  ("alexandria")
+  ("simplified-types"
+   "alexandria")
 
   :perform
   (test-op (o c) (symbol-call "SIMPLIFIED-TYPES-TEST-SUITE" "RUN-TEST-SUITE"))
